@@ -110,7 +110,7 @@ SELECT
 	,u.username   
 FROM  video_likes vl
 RIGHT JOIN videos v ON vl.video_id = v.video_id
-JOIN users u ON vl.user_id = u.user_id;
+LEFT JOIN users u ON u.user_id = u.user_id;
 
 -- 문제 34: 특정 카테고리 중 활동이 없는 데이터 찾기
 -- 주제: LEFT JOIN + WHERE IN
@@ -121,8 +121,7 @@ SELECT
 	,v.category  
 FROM  videos v
 LEFT JOIN video_likes vl ON v.video_id = vl.video_id
-WHERE v.category = 'IT/테크' 
-AND v.category = '교육'
+WHERE v.category IN ('IT/테크','교육') 
 AND vl.like_id IS null;
 
 -- 문제 35: JOIN 종합 문제
@@ -130,21 +129,32 @@ AND vl.like_id IS null;
 
 -- 문제: '대한민국' 국적의 사용자가 '좋아요'를 누른 비디오의 제목과, 그 비디오를 만든 크리에이터의 채널명을 조회하세요. 결과를 채널명 가나다순으로 정렬하세요.
 
-SELECT
- v.title  
-,c.channel_name
-FROM videos v 
-JOIN video_likes vl ON v.video_id = vl.video_id 
-JOIN users u ON vl.user_id = u.user_id 
-JOIN creators c ON  v.creator_id = c.creator_id;
+-- SELECT
+--  v.title  
+-- ,c.channel_name
+-- FROM videos v 
+-- JOIN video_likes vl ON v.video_id = vl.video_id 
+-- JOIN users u ON vl.user_id = u.user_id 
+-- JOIN creators c ON  v.creator_id = c.creator_id
+-- ORDER BY c.channel_name ASC;
 
+--강사님 해결책
+SELECT
+c.title 
+, d.channel_name 
+FROM users a
+JOIN video_likes b ON a.user_id = b.user_id 
+JOIN videos c ON b.video_id = c.video_id 
+JOIN creators d ON c.creator_id = d.creator_id 
+WHERE a.country = '대한민국'
+ORDER BY d.channel_name ASC;
 -- 문제 36: 데이터 그룹으로 묶고 개수 세기
 -- 주제: GROUP BY, COUNT()
 -- 문제: 각 비디오 카테고리별로 비디오가 총 몇 개씩 있는지 개수를 세어보세요.
 
 SELECT 
 a.category ,
-count(a.category)
+count(*)
 FROM videos a
 GROUP BY a.category;
 
@@ -161,7 +171,7 @@ c.channel_name
 FROM creators c 
 JOIN videos v ON c.creator_id = v.creator_id
 GROUP BY c.channel_name 
-ORDER BY v.view_count;
+ORDER BY sum(v.view_count) desc;
 
 -- 문제 38: 그룹화된 결과에 조건 적용하기
 -- 주제: GROUP BY, HAVING
@@ -176,6 +186,14 @@ JOIN videos v ON c.creator_id = v.creator_id
 GROUP BY c.creator_id 
 HAVING count(v.video_id) > 3;
 
+SELECT
+b.creator_id 
+, count(*) video_count
+FROM videos a
+JOIN creators b ON a.creator_id = b.creator_id 
+GROUP BY b.creator_id 
+HAVING count(a.video_id) > 3;
+
 -- 문제 39: JOIN과 GROUP BY, HAVING 
 -- 주제: JOIN, GROUP BY, HAVING
 
@@ -189,4 +207,15 @@ JOIN videos v ON c.creator_id = v.creator_id
 JOIN users u ON c.user_id = u.user_id 
 GROUP BY c.channel_name 
 HAVING AVG(v.view_count) > 500000
-WHERE u.country = '대한민국';
+WHERE u.country = '대한민국' ; 
+
+--강사님 해결책
+SELECT
+b.channel_name 
+, avg(c.view_count ) avg_views
+FROM users a
+JOIN creators b ON a.user_id = b.user_id 
+JOIN videos c ON b.creator_id = c.creator_id 
+WHERE a.country = '대한민국'
+GROUP BY b.channel_name 
+HAVING avg_views > 500000;
