@@ -192,18 +192,90 @@ FROM (
 -- 주제: WHERE IN과 JOIN을 포함한 서브쿼리
 -- 문제: 'IT/테크' 카테고리의 비디오를 하나라도 시청한 기록이 있는 모든 사용자의 username을 조회하세요.
 
+
+-- my version
 SELECT username
 FROM users a
-WHERE ()
+where exists (
+select user_id
+from watch_histories wh
+join videos v on wh.video_id = v.video_id 
+where category = 'IT/테크'
+and a.user_id = wh.user_id );
 
-SELECT title
-FROM videos
-WHERE category = 'IT/테크'
+select distinct user_id
+from watch_histories wh
+join videos v on wh.video_id = v.video_id 
+where category = 'IT/테크'
+
+-- gpt version 
+SELECT username
+FROM users a
+WHERE a.user_id IN (
+    SELECT wh.user_id
+    FROM watch_histories wh
+    JOIN videos v ON wh.video_id = v.video_id
+    WHERE v.category = 'IT/테크'
+);
 
 -- 문제 51: 각 행에 대한 연관 정보 조회하기
 -- 주제: SELECT 절의 스칼라 상관 서브쿼리
 -- 문제: creators 테이블의 각 채널에 대해, 채널명과 함께 해당 채널의 가장 높은 조회수를 기록한 비디오의 제목을 조회하세요.
 
+select
+b.channel_name 
+, (select a.title
+from videos a
+where a.creator_id = b.creator_id
+order by a.view_count
+limit 1)
+from creators b;
+
+select 
+a.channel_name
+,(select )
+from creators a;
+
+select Max(a.view_count)
+from videos a
+group by a.creator_id;
+
+select a.title
+from videos a
+where a.creator_id
+order by a.view_count
+
+-- 스칼라는 한 값만 리턴해야 하는데 where a = b 를 사용해서 
+-- 일단 아이디 하나 당 조회수별로 정렬함
+-- limit 1을 넣어서 맨 위 값만 나오게 함
+
+-- cluade version
+SELECT 
+    c.channel_name,
+    (SELECT v.title 
+     FROM videos v 
+     WHERE v.creator_id = c.creator_id 
+     ORDER BY v.view_count desc
+     limit 1) most_viewed
+FROM creators c;
+
+
 -- 문제 52: 임시 테이블을 만들어 쿼리 가독성 높이기
 -- 주제: WITH 절 (공통 테이블 표현식, Common Table Expression)
 -- 문제: 조회수가 1,000,000 (백만)을 초과하는 '인기 비디오'들을 먼저 정의한 후, 이 '인기 비디오'들을 올린 크리에이터들의 채널명을 중복 없이 조회하세요.
+
+SELECT a.creator_id,
+a.title
+FROM videos a
+WHERE view_count > 1000000
+
+WITH pop AS (
+SELECT title
+, creator_id 
+, a.video_id 
+FROM videos a
+WHERE view_count > 1000000
+)
+SELECT DISTINCT channel_name
+FROM pop
+JOIN creators c ON c.creator_id = pop.creator_id 
