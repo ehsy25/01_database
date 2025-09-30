@@ -40,9 +40,9 @@ SELECT *
 FROM employee e 
 WHERE e.EMAIL LIKE ('%____@%')
 AND e.DEPT_CODE IN ('D9','D5')
-AND e.HIRE_DATE IN ('90/01/01', '01/12/31')
-AND e.SALARY > 2700000
-.
+AND e.HIRE_DATE Between '90/01/01' and '01/12/31'
+AND e.SALARY > 2700000;
+
 -- 4. employee테이블에서 현재 근무중인 사원을 이름 오름차순으로 정렬해서 출력.
 
 /*
@@ -52,6 +52,10 @@ AND e.SALARY > 2700000
     ...
 
 */
+
+SELECT e.EMP_NAME 
+FROM employee e 
+ORDER BY e.EMP_NAME ;
 
 
 
@@ -66,6 +70,12 @@ AND e.SALARY > 2700000
 
 */
 
+SELECT e.EMP_NAME ,
+e.HIRE_DATE, 
+e.QUIT_DATE , 
+datediff(e.QUIT_DATE , e.HIRE_DATE),
+e.QUIT_YN 
+FROM employee e ;
 
 -- 6. 재직 중이고 휴대폰 마지막 자리가 2인 직원 중 입사일이 가장 최근인 직원 3명의 사원번호,
 -- 직원명, 전화번호, 입사일, 퇴직여부를 출력하세요.
@@ -78,6 +88,16 @@ AND e.SALARY > 2700000
         206	박나라	01096935222	2008-04-02 00:00:00	N
     */
 
+SELECT e.EMP_ID, 
+e.EMP_NAME, 
+e.PHONE , 
+e.HIRE_DATE , 
+e.QUIT_YN  
+FROM employee e 
+WHERE e.QUIT_YN = 'N'
+AND e.PHONE LIKE ('%2')
+ORDER BY e.HIRE_DATE DESC
+LIMIT 3;
 
 
 -- 7. <1단계> 전체 직원 중 연결된 관리자가 있는 직원의 인원을 출력하세요.
@@ -89,3 +109,9 @@ AND e.SALARY > 2700000
 
         16
     */
+
+SELECT count(e.EMP_ID )
+FROM employee e 
+WHERE e.MANAGER_ID IS NOT NULL;
+
+
